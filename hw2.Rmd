@@ -1,0 +1,371 @@
+---
+title: "stat HW2"
+author: "JIAYI LIU"
+date: "February 5, 2018"
+output: pdf_document
+---
+#Question 1
+##(a)
+The Cauchy (x,theta) has probability density:
+$$P(x;\theta)=\cfrac{1}{\pi[1+(x-\theta)^2]}$$
+Let $x_{1},x_{2}...x_{n}$be an i.i.d smple, $l(\theta)$ the log-likelihood function is:
+$$ l( \theta)= \ln L( \theta) = \ln(  \prod_{i=1}^np(x_{i}; \theta)) \\= \ln( \prod_{i=1}^n \cfrac{1}{ \pi[1+(x_{i}- \theta)^2]}) \\= \sum_{i=1}^n \ln ( \cfrac{1}{ \pi[1+(x_{i}- \theta)^2]}) \\= \sum_{i=1}^n( \ln ( \cfrac{1}{ \pi}))+ \sum_{i=1}^n \ln( \cfrac{1}{1+(x_{i}- \theta)^2}) \\= -n \ln \pi- \sum_{i=1}^n \ln (1+( \theta-x_i)^2) $$
+$$ l^{'}( \theta)= 0-( \sum_{i=1}^n \ln (1+(x_i- \theta)^2))^{'} \\= - \sum_{i=1}^n \cfrac{1}{1+(x_i- \theta)^2}*(1+x^2_i-2x_i \theta+ \theta^2)^{'} \\= - \sum_{i=1}^n \cfrac{2( \theta-x_i)}{1+( \theta-x_i)^2} \\= -2 \sum_{i=1}^n \cfrac{ \theta-x_i}{1+( \theta-x_i)^2} $$
+$$ l^{''}( \theta)= -2 \sum_{i=1}^n \cfrac{1+( \theta-x_i)^2-2( \theta-x_i)^2}{[1+( \theta-x_i)^2]^2} \\= -2 \sum_{i=1}^n \cfrac{1-(  \theta-x_{i})^2}{[1+( \theta-x_{i})^2]^2} $$
+$$ P(x)= \cfrac{1}{ \pi(1+x^2)} $$
+$$ P^{'}(x)= - \cfrac{2x}{ \pi(1+x^2)^2} $$
+$$ I( \theta)= n \int_{- \infty}^ \infty \cfrac{{p^{'}(x)}^2}{p(x)}dx \\= \int_{- \infty}^ \infty( \cfrac{4x^2}{ \pi^2(1+x^2)^4})* \cfrac{ \pi(1+x^2)}{1}dx \\= \cfrac{4n}{ \pi} \int_{- \infty}^ \infty \cfrac{x^2}{(1+x^2)^3}dx $$
+Set $x= \tan( \alpha); \alpha \in(- \cfrac{ \pi}{2}, \cfrac{ \pi}{2})$
+So,
+$$I( \theta)= \cfrac{4n}{ \pi} \int_{- \cfrac{ \pi}{2}}^{ \cfrac{ \pi}{2}} \cfrac{ \cos^{-2}( \alpha)-1}{(cos^{-2}( \alpha))^3} \\= \cfrac{4n}{ \pi} \int_{- \cfrac{ \pi}{2}}^{ \cfrac{ \pi}{2}} \cfrac{ \tan^2 (\alpha)}{(1+tan^2 ( \alpha))^3} \cfrac{1}{\cos^2 ( \alpha)}d \alpha \\= \cfrac{4n}{ \pi} \int_{- \cfrac{ \pi}{2}}^{ \cfrac{  \pi}{2}}sin^2( \alpha)*cos^2( \alpha)d \alpha \\= \cfrac{4n}{ \pi}* \cfrac{ \pi}{8}= \cfrac{n}{2} $$
+
+##(b)
+###Graph the log-likelihood function with given simple
+```{r}
+# Sample data 
+x <- c(1.77, -0.23, 2.76, 3.80, 3.47, 56.75, -1.34, 4.24, -2.44, 3.29, 3.71, -2.40, 4.53, -0.07, -1.05, -13.87, -2.53, -1.75)
+# Range of theta
+theta_1<- seq(-100,100,1)
+# Log-likely function of Cauchy dist.
+n<- length(x)
+log_lik<- c()
+for (i in 1:length(theta_1)){
+  log_lik[i]<- -n*log(pi)-sum(log(1+(theta_1[i]-x)^2))
+}
+# Graph the function of Cauchy dist.
+plot(theta_1,log_lik,type="l",ylab= "log_lik",xlab="theta",main="Cauchy")
+
+```
+###Find the MLE for theta using the Newton-Raphson method.
+```{r}
+# Initial value of theta
+initial_value<- c(-11,-1,0,1.5,4,4.7,7,8,38)
+# Function of l'(theta) 
+log_lik_1<- function(x,theta_2){
+  -2*sum((theta_2-x)/(1+(theta_2-x)^2))
+}
+# Function of l'(theta)
+log_lik_2<- function(x,theta_2){
+  -2*sum((1-(theta_2-x)^2)/((1+(theta_2-x)^2)^2))
+}
+# Sample mean
+s_m<- mean(x)
+# Newton method using my own fuction
+newton<- function(th){
+theta_2<- array()
+theta_2[1]<- th # start point theta
+i<- 1
+difference<- 10
+while(abs(difference)> 10^(-10) & i<1000){
+  theta_2[i+1]<- theta_2[i]-log_lik_1(x,theta_2[i])/log_lik_2(x,theta_2[i])
+  difference<- theta_2[i+1]-theta_2[i]
+  i=i+1
+}
+print(theta_2[i])
+}
+newton(-1)
+newton(-0)
+newton(1.5)
+newton(4)
+newton(4.7)
+newton(s_m)
+## With my own fuction, I only find MLE of theta when starting from ( -1 , 0 , 1.5 , 4 , 4.7 )
+## MLE = -0.5914735 when starting from -1
+## MLE = -0.5914735 when starting from 0
+## MLE = 1.09273 when starting from 1.5
+## MLE = 3.021345 when starting from 4
+## MLE = -0.5914735 when starting from 4.7
+## None MLE when starting from ( -11 , 7 , 8 , 38 )
+## MLE = 3.021345 when starting from sample mean, so sample mean is a good starting point
+
+# Newton method using nlminb
+
+## Function being minimized
+theta_3<- array()
+g<- function(theta_3){
+  n*log(pi)+sum(log(1+(theta_3-x)^2))
+  }
+## Gradient of the function
+gr.g <- function(theta_3){
+  2*sum((theta_3-x)/(1+(theta_3-x)^2))
+  }
+## Hessian of the function
+hess.g <- function(theta_3){
+  hg<- 2*sum((theta_3-x)/(1+(theta_3-x)^2))/(2*sum((1-(theta_3-x)^2)/(1+(theta_3-x)^2)^2))
+  return(matrix(hg,nrow = 1))
+}
+## Get MLE
+MLE_nlm<- array()
+for (i in 1:length(initial_value)){
+  MLE_nlm[i] <- nlminb(initial_value[i],g,gr.g,hess.g)$par
+  }
+
+## List MLE
+print(MLE_nlm)
+
+## If sample mean is the starting point
+print(newton_nlm <- nlminb(mean(x),g,gr.g,hess.g)$par)
+## Sample mean is a good starting point
+
+```
+##(c) 
+Fixed-point iterations using, $$\alpha\in(1, 0.64, 0.25)$$
+```{r}
+fixed_point<- function(al,th){ #al = alpha;th = start point
+alpha<- al # When alpha = 1
+theta_4<- array()
+theta_4[1]<- th
+i<- 1
+difference<- 10
+while(abs(difference)> 10^(-10) & i<1000){
+  theta_4[i+1]<- theta_4[i]+alpha*log_lik_1(x,theta_4[i])
+  difference<- theta_4[i+1]-theta_4[i]
+  i=i+1
+}
+print(theta_4[i])
+}
+fixed_point(1,-11)
+fixed_point(1,-1)
+fixed_point(1,0)
+fixed_point(1,1.5)
+fixed_point(1,4)
+fixed_point(1,4.7)
+fixed_point(1,7)
+fixed_point(1,8)
+fixed_point(1,38)
+## MLE = -0.5914735 when starting from -11
+## MLE = 0.1035079 when starting from -1
+## MLE = -1.106309 when starting from 0
+## MLE = 0.1035079 when starting from 1.5
+## MLE = -1.106309 when starting from 4
+## MLE = -1.171392 when starting from 4.7
+## MLE = -1.171392 when starting from 7
+## MLE = 0.2417269 when starting from 8
+## MLE = 0.2417269 when starting from 38
+
+# When alpha = 0.64
+fixed_point(0.64,-11)
+fixed_point(0.64,-11)
+fixed_point(0.64,-1)
+fixed_point(0.64,0)
+fixed_point(0.64,1.5)
+fixed_point(0.64,4)
+fixed_point(0.64,4.7)
+fixed_point(0.64,7)
+fixed_point(0.64,8)
+fixed_point(0.64,38)
+
+## MLE = -0.5914735 when starting from -11
+## MLE = -0.5914735 when starting from -1
+## MLE = -0.5914735 when starting from 0
+## MLE = 3.239838 when starting from 1.5
+## MLE = -0.5914735 when starting from 4
+## MLE = -0.5914735 when starting from 4.7
+## MLE = 2.591518 when starting from 7
+## MLE = -0.5914735 when starting from 8
+## MLE = 2.591518 when starting from 38
+
+# When alpha = 0.25
+fixed_point(0.25,-11)
+fixed_point(0.25,-11)
+fixed_point(0.25,-1)
+fixed_point(0.25,0)
+fixed_point(0.25,1.5)
+fixed_point(0.25,4)
+fixed_point(0.25,4.7)
+fixed_point(0.25,7)
+fixed_point(0.25,8)
+fixed_point(0.25,38)
+
+## MLE = -0.5914735 when starting from -11
+## MLE = -0.5914735 when starting from -1
+## MLE = -0.5914735 when starting from 0
+## MLE = 3.239838 when starting from 1.5
+## MLE = 3.021345 when starting from 4
+## MLE = 3.021345 when starting from 4.7
+## MLE = 3.021345 when starting from 7
+## MLE = 3.021345 when starting from 8
+## MLE = 3.021345 when starting from 38
+
+```
+##(d)
+Fisher&Newton
+```{r}
+##Using Fisher scoring to find MLE for theta
+theta_5<- array()
+fisher<- function(th) {
+  theta_5[1]<- th
+i<- 1
+difference<- 10
+while(abs(difference)> 10^(-10) & i<1000){
+  theta_5[i+1]<- theta_5[i]+log_lik_1(x,theta_5[i])/(n/2)
+  difference<- theta_5[i+1]-theta_5[i]
+  i=i+1
+}
+print(theta_5[i])
+}
+fisher(-11)
+fisher(-1)
+fisher(0)
+fisher(1.5)
+fisher(4)
+fisher(4.7)
+fisher(7)
+fisher(8)
+fisher(38)
+## MLE = -0.5914735 when starting from -11
+## MLE = -0.5914735 when starting from -1
+## MLE = -0.5914735 when starting from 0
+## MLE = 3.021345 when starting from 1.5
+## MLE = 3.021345 when starting from 4
+## MLE = 3.021345 when starting from 4.7
+## MLE = 3.021345 when starting from 7
+## MLE = 3.021345 when starting from 8
+## MLE = 3.021345 when starting from 38
+
+
+
+## Refine the estimate by running Newton-Raphson method
+newton(-0.5914735)
+newton(3.021345)
+## MLE = -0.5914735 when starting from -0.5914735
+## MLE = 3.021345 when starting from 3.021345
+```
+##(e)
+Comment
+From Q1 part b we know that not all $\theta$ converged by using Newton method. From part c we know that the fixed-point method is slower than Newton method because it has one more variable- $\alpha$.
+
+#Question 2
+##(a)
+The log-likelihood function is:
+$$l( \theta)= \ln( \prod_{i=1}^n \cfrac{1-cos(x_{i}- \theta)}{2 \pi})= \sum_{i=1}^{n} \ln(1-cos(x_{i}- \theta)) -n \ln(2 \pi) $$
+```{r}
+## The graph of the log-likelihood function
+# Sample data
+x <- c(3.91, 4.85, 2.28, 4.06, 3.70, 4.04, 5.46, 3.53, 2.28, 1.96, 2.53, 3.88, 2.22, 3.47, 4.82, 2.46, 2.99, 2.54, 0.52)
+log_lik_Q2<-function(theta, par=x){
+  n <- length(x)
+  ll <- sapply(theta, function(theta_6) sum(log(1 - cos(x - theta_6))) - n * log(2 * pi))
+  return(ll)
+}
+curve(log_lik_Q2, -pi, pi) # Graph the function with (-pi < theta < pi)
+```
+##(b)
+$$ E[X|\theta] = \cfrac{1}{2 \pi} \int_{0}^{2\pi} x({1-\cos(x-\theta)})dx \\= \pi- \cfrac{1}{2 \pi} \int_{0}^{2 \pi}x \cos(x- \theta)dx$$
+Using intergration by part:
+ $$ E[X| \theta]= \pi- \cfrac{1}{2 \pi}[x \sin(x- \theta)|_{0}^{2 \pi}+ \int_{0}^{2 \pi} \sin(x- \theta)dx] \\ = \pi- \sin(2 \pi- \theta)- \cfrac{1}{2 \pi}[ \cos(x- \theta)]|_{0}^{2 \pi}
+ \\ = \pi- \sin(2 \pi- \theta)- \cfrac{1}{2 \pi}[ \cos(2 \pi- \theta)- \cos( \theta)] \\= \pi-[ \sin{(2 \pi)} \cos{(- \theta)}+ \cos{(2 \pi)} \sin{(- \theta)}] \\- \cfrac{1}{2 \pi}[ \cos(2 \pi) \cos(- \theta)- \sin(2 \pi) \sin(- \theta)] \\+ \cfrac{1}{2 \pi}[ \cos(0) \cos(- \theta)- \sin(0) \sin(- \theta)] \\= \pi- \sin(- \theta)- \cfrac{1}{2 \pi} \cos(- \theta)+ \cfrac{1}{2 \pi} \cos(- \theta) \\= \pi- \sin(- \theta) \\= \pi- \sin( \theta) $$
+Then we have,
+$$ E[X| \theta]= \pi- \sin( \theta)= \bar{x} $$
+So,
+$$ \sin( \theta)= \pi- \bar{x} \\ \theta= \arcsin( \pi- \bar{x})$$ 
+
+$$ \hat{ \theta}_{ \text{moment}}= \arcsin( \pi - \bar{x}) $$
+```{r}
+sample_mean<- mean(x)
+moment<- asin(pi-sample_mean)
+```
+The moment estimator $\hat{ \theta}_{ \text{moment}}=$ -0.09539407
+##(c)
+```{r}
+# Function of l^{'}( \theta) 
+log_lik_Q2_1<- function(theta_7){
+  -1*sum((sin(x-theta_7)) / (1-cos(x-theta_7)))
+}
+# Function of l^{''}( \theta)
+log_lik_Q2_2<- function(theta_8){
+  -1*sum(1 / (1-cos(x-theta_8)))
+}
+
+# Newton method
+newton_2<- function(th){
+theta_9<- array()
+theta_9[1]<- th # start point theta
+i<- 1
+difference<- 10
+while(abs(difference)> 10^(-10) & i<1000){
+  theta_9[i+1]<- theta_9[i]-log_lik_Q2_1(theta_9[i])/log_lik_Q2_2(theta_9[i])
+  difference<- theta_9[i+1]-theta_9[i]
+  i=i+1
+}
+print(theta_9[i])
+}
+
+newton_2(-0.09539407)
+```
+MLE for $$\theta$$ using the Newton-Raphson method with $$\theta_{0}$$ = $$\hat{ \theta}_{ \text{moment}}=$$ -0.09539407 is 0.003118157
+##(d)
+```{r}
+newton_2(-2.7)
+newton_2(2.7)
+```
+MLE of $$\theta_{0}$$= -2.7 is -2.668857 and MLE of $$ \theta_{0}$$= 2.7 is 2.848415. the MLE is very close to the start point.
+##(e)
+```{r}
+starting_value_200 <- seq(-pi,pi,length.out = 200)
+a_200 <- array()
+for (i in 1:length(starting_value_200)){
+  a_200[i] <- newton_2(starting_value_200[i])
+}
+mx<-cbind(starting_value_200,a_200)
+print(mx)
+# The set of starting values are divided into 18 groups
+Group.1 <- mx[c(1:11), 1]
+Group.2 <- mx[c(12:13), 1]
+Group.3 <- mx[c(14:18), 1]
+Group.4 <- mx[c(19:24), 1]
+Group.5 <- mx[25, 1]
+Group.6 <- mx[c(26:29), 1]
+Group.7 <- mx[30, 1]
+Group.8 <- mx[c(31:54), 1]
+Group.9 <- mx[55, 1]
+Group.10 <- mx[c(56:74), 1]
+Group.11 <- mx[c(75:116), 1]
+Group.12 <- mx[c(117:162), 1]
+Group.13 <- mx[c(163:170), 1]
+Group.14 <- mx[c(171:172), 1]
+Group.15 <- mx[c(173:178), 1]
+Group.16 <- mx[c(179:180), 1]
+Group.17 <- mx[c(181:195), 1]
+Group.18 <- mx[c(196:200), 1]
+```
+
+#Queation 3
+##(a)
+```{r}
+beetles <- data.frame(
+days = c(0, 8, 28, 41, 63, 69, 97, 117, 135, 154),
+beetles = c(2, 47, 192, 256, 768, 896, 1120, 896, 1184, 1024))
+N_0<- 2
+k<- 1500 # we set k equals to 1500 
+r_t<- log((beetles$beetles*(k-2))/(k - beetles$beetles)*2)
+r<- (r_t/beetles$days)
+r # r is a set which has 10 numbers with first number inf
+mean(r[2:10]) # mean is 0.1652033
+N_t<- function(k,r,t){
+  N_0*k/(N_0+(k-N_0)*exp((-r)*t))# t is days
+}
+
+bb <- nls(beetles~N_t(k,r,days),data = beetles,start=list(k=1500,r=0.1652033),trace=TRUE)
+```
+From the form, we can find out initial value of k is 1500, r is 0.1652033. And optimized value of k is 1049.4068376, r is 0.1182685.
+##(b)
+```{r}
+k <- seq(1000,1500, length.out = 100) 
+r <- seq(0.07,0.15, length.out = 100)
+days = c(0, 8, 28, 41, 63, 69, 97, 117, 135, 154)
+beetles = c(2, 47, 192, 256, 768, 896, 1120, 896, 1184, 1024)
+sum_error <- function(k,r){
+  sum((beetles-2*k/(2+(k-2)*exp(-r*days)))^2)
+}
+z <- matrix(rep(0,10000),nrow = 100)
+a<- 1
+b<- 1
+for (a in 1:100){
+  for(b in 1:100){
+    z[a,b] <- sum_error(k[a],r[b])
+  }
+}
+contour(k, r, z, xlab = 'K', ylab = 'r', plot_title = title ("Contour plot"))
+
+```
